@@ -1,0 +1,70 @@
+function operatorDelete(id) {
+
+
+    var idSplit = id.split(",");
+    var deleteCount = 0;
+    var deleteNot = 0;
+    var contactCount = 0;
+    var contactNot = 0;
+    var operatorsNotFound = "";
+    var contactsNotFound = "";
+    var userRoleList = "";
+    var userRoleCount = 0;
+
+    for (var i = 0; i < idSplit.length; i++) {
+
+        var foperator = new SCFile("operator");
+        var rc = foperator.doSelect("name=\"" + idSplit[i] + "\"");
+
+        if (rc == RC_SUCCESS) {
+            foperator.doDelete();
+            print("Operator " + idSplit[i] + " has been deleted.");
+            deleteCount++;
+            if (foperator.user_role == "DR_CORPSYS" || foperator.user_role == "DR_SERVICE_DESK" || foperator.user_role == "DR_UPDATE" || foperator.user_role == "DR_DOE-ECS" || foperator.user_role == "DR_APPROVE") {
+
+                userRoleList += idSplit[i] + " (" + foperator.user_role + "), ";
+                userRoleCount++;
+            }
+
+        } else {
+            print("Operator " + idSplit[i] + " not found.");
+            deleteNot++;
+            operatorsNotFound += idSplit[i] + ",";
+        }
+
+        var fcontacts = new SCFile("contacts");
+        var rc = fcontacts.doSelect("contact.name=\"" + idSplit[i] + "\"");
+
+        if (rc == RC_SUCCESS) {
+            fcontacts.payroll_no = "1";
+            fcontacts.doSave();
+            print("Contact " + fcontacts.contact_name + " has been updated.");
+            contactCount++;
+
+        } else {
+            print("Contact " + idSplit[i] + " not found.");
+            contactNot++;
+            contactsNotFound += idSplit[i] + ",";
+        }
+    }
+
+    print("All done...");
+    print("Number of Operators Deleted: " + deleteCount);
+    print("Number of Operators NOT Deleted: " + deleteNot);
+    print("Number of Contacts Updated: " + contactCount);
+    print("Number of Contacts NOT Updated: " + contactNot);
+    print("Number of Operators deleted with flagged User Roles: " + userRoleCount);
+
+    if (deleteNot > 0) {
+        print("Operators Not Found: " + operatorsNotFound);
+    }
+
+    if (contactNot > 0) {
+        print("Contacts Not Found: " + contactsNotFound);
+    }
+    if (userRoleCount > 0) {
+        print("Operators with flagged User Roles: " + userRoleList);
+    }
+
+
+}
